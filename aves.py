@@ -129,7 +129,7 @@ if __name__=='__main__':
     av3=Aves_China("v3.0")
     av4=Aves_China("v4.0")
     av5=Aves_China("v5.0")
-    print(av2.nfamilies("雀形目"))
+    print(av2.nfamilies_all())
 
 
 
