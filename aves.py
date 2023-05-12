@@ -125,11 +125,8 @@ class Bird_species(object):
         return splist
 
 if __name__=='__main__':
-    av2=Aves_China("v2.2")
-    av3=Aves_China("v3.0")
-    av4=Aves_China("v4.0")
     av5=Aves_China("v5.0")
-    print(av2.nfamilies_all())
+    print(av5.nfamilies_all())
 
 
 
