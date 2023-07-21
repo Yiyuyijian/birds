@@ -2,14 +2,11 @@ import aves
 import openpyxl
 import tkinter as tk
 from tkinter import ttk
-from openpyxl.styles import *
+from openpyxl.styles import numbers,Font,Side,Alignment,Border,PatternFill,Color
 import tkinter.messagebox
+import calendar
+from datetime import datetime
 
-all_dates=('01','02','03','04','05','06','07','08','09','10',
-            '11','12','13','14','15','16','17','18','19','20',
-            '21','22','23','24','25','26','27','28','29','30','31')
-style = ('dashDot','dashDotDot','dashed','dotted','double','hair','medium', 
-'mediumDashDot','mediumDashDotDot','mediumDashed','slantDashDot','thick','thin')
 class Writer(object):
     def __init__(self) -> None:
         super().__init__()
@@ -27,7 +24,7 @@ class Writer(object):
                 'right':      1,        # 右边框
                 'bottom':     1         # 底边框
                 })
-#基础类，提供主界面和容器        
+#基础类，提供主界面和容器
 class Base_UI(object):
     def __init__(self):
         super().__init__()
@@ -36,7 +33,7 @@ class Base_UI(object):
         self.Win.geometry('800x600')
         self.Win.resizable(0,0)#框体大小可调性，分别表示x,y方向的可变性
 
-        self.excel=openpyxl.load_workbook('D:/animals/我的记录.xlsx')
+        self.excel=openpyxl.load_workbook('E:/animals/我的记录.xlsx')
         self.sheets=self.excel.worksheets
 
         tk.Label(self.Win,text='选择日期：',font=('隶书',20)).place(x=50,y=20)
@@ -48,13 +45,14 @@ class Base_UI(object):
         self.Month_combobox=ttk.Combobox(self.Win,width=10)
         self.Month_combobox['values']=list(range(1,13))
         self.Month_combobox.place(x=350,y=25)
+        self.Month_combobox.bind("<<ComboboxSelected>>",self.__set_days)
         tk.Label(self.Win,text='月',font=('隶书',15)).place(x=450,y=25)
 
-        self.Date_combobox=ttk.Combobox(self.Win,width=10,values=all_dates)
-        self.Date_combobox.place(x=490,y=25)
+        self.Day_combobox=ttk.Combobox(self.Win,width=10)
+        self.Day_combobox.place(x=490,y=25)
         tk.Label(self.Win,text='日',font=('隶书',15)).place(x=590,y=25)
 
-        self.__aves=aves.Aves_China("v5.0")
+        self.__aves=aves.Aves_China(5.0)
 
         tk.Label(self.Win,text="选择目：",font=('隶书',20)).place(x=50,y=100)
         self.Order_combobox=ttk.Combobox(self.Win,width=15,values=self.__aves.orders())
@@ -98,9 +96,23 @@ class Base_UI(object):
         self.Note=tk.Text(self.Win,width=35,bd=5)
         self.Note.place(x=500,y=160)
 
-        tk.Button(self.Win,text='保  存',bg='red',width=20,height=1,command=self.__save_data).place(x=50,y=500)
-        tk.Button(self.Win,text='完  成',bg='red',width=20,height=1,command=self.__finish).place(x=300,y=500)
+        once=tk.Button(self.Win,text='录完一种点击',bg='red',width=20,height=1,command=self.__save_data)
+        once.place(x=50,y=500)
+        over=tk.Button(self.Win,text='全部录完点击',bg='red',width=20,height=1,command=self.__finish)
+        over.place(x=300,y=500)
         
+    def __set_days(self,*args):
+        try:
+            year = int(self.Year_combobox.get())
+            month = int(self.Month_combobox.get())
+            days = calendar.monthrange(year,month)[1]
+            self.Day_combobox.delete(0,tk.END)
+            self.Day_combobox.config(values=list(range(1,days+1)))
+        except:
+            self.Month_combobox.delete(0,tk.END)
+            tkinter.messagebox.showerror(title="未选择年",message="请先选择年份")
+            
+    
     def __set_families(self,*args):
         self.Family_combobox['values']=self.__aves.families_in_order(self.Order_combobox.get())
         self.Genus_combobox['values']=[]
@@ -110,7 +122,7 @@ class Base_UI(object):
         self.Species_combobox.delete(0,tk.END)
 
     def __set_genuses(self,*args):
-        self.Genus_combobox['values']=self.__aves.genus_in_family(self.Family_combobox.get())
+        self.Genus_combobox['values']=self.__aves.genuses_in_family(self.Family_combobox.get())
         self.Species_combobox['values']=[]
         self.Genus_combobox.delete(0,tk.END)
         self.Species_combobox.delete(0,tk.END)
@@ -120,27 +132,44 @@ class Base_UI(object):
         self.Species_combobox.delete(0,tk.END)
 
     def __save_data(self):
-        data=[self.sheets[0].max_row,self.Species_combobox.get(),self.Year_combobox.get()+'年'+self.Month_combobox.get()+'月'+
-        self.Date_combobox.get()+'日',self.Province_entry.get(),self.City_entry.get(),self.County_entry.get(),
-        self.Local_entry.get(),self.Order_combobox.get(),self.Family_combobox.get(),self.Genus_combobox.get(),
-        self.Note.get(1.0,tk.END)]
+        #组装数据
+        datas = []
+        datas.append(self.sheets[0].max_row)
+        datas.append(self.Species_combobox.get())
+        year = int(self.Year_combobox.get())
+        month = int(self.Month_combobox.get())
+        day = int(self.Day_combobox.get() )       
+        datas.append(datetime(year,month,day))        
+        datas.append(self.Province_entry.get())
+        datas.append(self.City_entry.get())
+        datas.append(self.County_entry.get())
+        datas.append(self.Local_entry.get())
+        datas.append(self.Order_combobox.get())
+        datas.append(self.Family_combobox.get())
+        datas.append(self.Genus_combobox.get())
+        datas.append(self.Note.get(1.0,tk.END))
 
         #续写
-        self.sheets[0].append(data)
+        self.sheets[0].append(datas)
         #设置新添加的行的格式
         for cell in self.sheets[0][self.sheets[0].max_row]:
-            cell.font=Font(name='隶书',size=18)
-            cell.border=Border(left=Side(style=style[-1]),
-                                right=Side(style=style[-1]),
-                                top=Side(style=style[-1]),
-                                bottom=Side(style=style[-1]))
+            cell.font=Font(name='宋体',size=12)
+            cell.border=Border(left = Side(style="thin"),
+                               right= Side(style="thin"),
+                               top  = Side(style="thin"),
+                               bottom=Side(style="thin"))
             cell.fill=PatternFill(bgColor=Color(index=3))
             cell.alignment=Alignment(horizontal='center',vertical='center')
+        #设置日期显示格式
+        self.sheets[0].cell(self.sheets[0].max_row,3).number_format=numbers.FORMAT_DATE_YYYYMMDD2
+        #设置行高
+        self.sheets[0].row_dimensions[self.sheets[0].max_row].height=20
 
+        #清除上一次数据
         self.Species_combobox.delete(0,tk.END)
         self.Year_combobox.delete(0,tk.END)
         self.Month_combobox.delete(0,tk.END)
-        self.Date_combobox.delete(0,tk.END)
+        self.Day_combobox.delete(0,tk.END)
         self.Province_entry.delete(0,tk.END)
         self.City_entry.delete(0,tk.END)
         self.County_entry.delete(0,tk.END)
@@ -149,10 +178,11 @@ class Base_UI(object):
         self.Family_combobox.delete(0,tk.END)
         self.Genus_combobox.delete(0,tk.END)
         self.Note.delete(1.0,tk.END)
-        tkinter.messagebox.showinfo('提示','数据已保存')
+        tkinter.messagebox.showinfo('提示','一种鸟的数据已保存')
  
     def __finish(self):
-        self.excel.save('D:/animals/我的记录.xlsx')
-        tkinter.messagebox.showinfo('提示','录入的鸟种记录已保存')
+        self.excel.save('E:/animals/我的记录.xlsx')
+        tkinter.messagebox.showinfo('提示','所有录入的鸟种记录已保存')
 
-Base_UI().Win.mainloop()
+if __name__ == "__main__":
+    Base_UI().Win.mainloop()
