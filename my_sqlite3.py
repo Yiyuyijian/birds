@@ -19,30 +19,24 @@ class my_sql(object):
             return False
 
     def create_table(self,table_name:str,columns:str):
-        print(f"CREATE TABLE if not exists {table_name}{columns}")
         self.__cursor.execute(f"CREATE TABLE if not exists {table_name}{columns}")
         self.__connention.commit()
 
     def show_tables(self):
-        print('SELECT name from sqlite_master WHERE type= "table"')
         self.__cursor.execute('SELECT name from sqlite_master WHERE type= "table"')
         print(self.__cursor.fetchall())
 
     def delete_table(self,table_name:str):
-        print(f'drop table if exists {table_name}')
         self.__cursor.execute(f'drop table if exists {table_name}')
 
     def insert_row(self,table_name:str,row:tuple):
-        print(f"INSERT INTO {table_name} VALUES{row}")
         self.__cursor.execute(f"INSERT INTO {table_name} VALUES{row}")
         self.__connention.commit()
 
     def value_update(self,table_name:str,column:str,value):
-        print(f'UPDATE {table_name} SET {column} = "{value}" where id = 2')
         self.__cursor.execute(f'UPDATE {table_name} SET {column} = "{value}" where id = 2')
 
     def row_values(self,table_name:str,end_row:int = None):
-        print(f'SELECT * FROM {table_name}')
         self.__cursor.execute(f'SELECT * FROM {table_name}')#*表示选择所有列
         if end_row == None:
             return self.__cursor.fetchall()
@@ -58,6 +52,7 @@ class my_sql(object):
 
 
 if __name__ == "__main__":
-    sql = my_sql("test")
+    sql = my_sql("China_birds_checklist")
 
-    print(sql.row_values('test1'))
+    sql.show_tables()
+    sql.close()
